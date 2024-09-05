@@ -37,3 +37,6 @@ No permissions, currently.
 
 No commands.
 
+## Work in progress
+
+1. Verify that ammoCount is maintained.
