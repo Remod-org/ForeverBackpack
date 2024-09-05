@@ -16,17 +16,19 @@ At wipe, the player's wear inventory should be empty.  A new backpack will be ad
 ```json
 {
   "Options": {
+    "AlwaysIssueBackpack": false,
     "UseLargeBackpack": true,
     "debug": true
   },
   "Version": {
     "Major": 0,
     "Minor": 0,
-    "Patch": 1
+    "Patch": 2
   }
 }
 ```
 
+- `AlwaysIssueBackpack` -- (Default false) Issue backpack for a new player and equip in their wear container
 - `UseLargeBackpack` -- (Default true) Use the large Rust backpack instead of the small backpack
 
 ### Permissions

@@ -1,10 +1,30 @@
-﻿using Oxide.Core;
+#region License (GPL v2)
+/*
+    ForeverBackpack
+    Copyright (c) 2024 RFC1920 <desolationoutpostpve@gmail.com>
+
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License v2.0.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+    Optionally you can also view the license at <http://www.gnu.org/licenses/>.
+*/
+#endregion
+using Oxide.Core;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Oxide.Plugins
 {
-    [Info("ForeverBackpack", "RFC1920", "0.0.1")]
+    [Info("ForeverBackpack", "RFC1920", "0.0.2")]
     [Description("Restore contents of worn Rust backpack at wipe")]
     internal class ForeverBackpack : RustPlugin
     {
@@ -116,8 +136,21 @@ namespace Oxide.Plugins
             if (reloaded.Contains(player.userID)) return;
 
             // Add backpack and contents if available
-            if (_backpacks.ContainsKey(player.userID))
+            if (!_backpacks.ContainsKey(player.userID) && configData.Options.AlwaysIssueBackpack)
             {
+                // New player, and we have decided to issue a backpack
+                if (player.inventory.containerWear != null && player.inventory.containerWear.IsEmpty())
+                {
+                    // Add empty BP to inventory
+                    DoLog($"Adding empty backpack for {player?.displayName}");
+                    Item item = ItemManager.CreateByItemID(configData.Options.UseLargeBackpack ? -907422733 : 2068884361);
+                    item.MoveToContainer(player.inventory.containerWear);
+                    reloaded.Add(player.userID);
+                }
+            }
+            else if (_backpacks.ContainsKey(player.userID))
+            {
+                // Normal reload process
                 if (player.inventory.containerWear != null && player.inventory.containerWear.IsEmpty())
                 {
                     // Add BP to inventory
@@ -177,6 +210,7 @@ namespace Oxide.Plugins
         private class Options
         {
             public bool UseLargeBackpack;
+            public bool AlwaysIssueBackpack;
             public bool debug;
         }
 
@@ -188,6 +222,7 @@ namespace Oxide.Plugins
                 Options = new Options()
                 {
                     UseLargeBackpack = true,
+                    AlwaysIssueBackpack = false,
                     debug = false
                 },
                 Version = Version
