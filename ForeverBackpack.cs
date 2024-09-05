@@ -24,7 +24,7 @@ using System.Linq;
 
 namespace Oxide.Plugins
 {
-    [Info("ForeverBackpack", "RFC1920", "0.0.4")]
+    [Info("ForeverBackpack", "RFC1920", "0.0.5")]
     [Description("Restore contents of worn Rust backpack at wipe")]
     internal class ForeverBackpack : RustPlugin
     {
@@ -80,6 +80,15 @@ namespace Oxide.Plugins
                 PlayerDisconnect(player);
             }
             SaveData();
+        }
+
+        private bool CanLootPlayer(BasePlayer target, BasePlayer looter)
+        {
+            if (target.IsSleeping() || !target.IsConnected)
+            {
+                if (configData.Options.PreventLootingSleepers) return false;
+            }
+            return true;
         }
 
         private void OnPlayerDisconnected(BasePlayer player, string reason)
@@ -228,6 +237,8 @@ namespace Oxide.Plugins
             public bool AlwaysIssueBackpack;
             public bool RequirePermission;
 
+            public bool PreventLootingSleepers;
+
             public List<string> RestrictedItems;
 
             public bool debug;
@@ -243,6 +254,7 @@ namespace Oxide.Plugins
                     UseLargeBackpack = true,
                     AlwaysIssueBackpack = false,
                     RequirePermission = false,
+                    PreventLootingSleepers = false,
                     RestrictedItems = new List<string>(),
                     debug = false
                 },
