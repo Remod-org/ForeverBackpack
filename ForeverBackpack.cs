@@ -24,7 +24,7 @@ using System.Linq;
 
 namespace Oxide.Plugins
 {
-    [Info("ForeverBackpack", "RFC1920", "0.0.2")]
+    [Info("ForeverBackpack", "RFC1920", "0.0.3")]
     [Description("Restore contents of worn Rust backpack at wipe")]
     internal class ForeverBackpack : RustPlugin
     {
@@ -34,6 +34,7 @@ namespace Oxide.Plugins
 
         private Dictionary<ulong, List<BPItem>> _backpacks = new Dictionary<ulong, List<BPItem>>();
         private List<ulong> reloaded = new List<ulong>();
+        private const string permUse = "foreverbackpack.use";
 
         public class BPItem
         {
@@ -53,6 +54,7 @@ namespace Oxide.Plugins
 
         private void OnServerInitialized()
         {
+            permission.RegisterPermission(permUse, this);
             LoadConfigValues();
             LoadData();
             if (newsave)
@@ -89,6 +91,11 @@ namespace Oxide.Plugins
         {
             if (player == null) return;
             if (!player.userID.IsSteamId()) return;
+
+            if (configData.Options.RequirePermission && !permission.UserHasPermission(player.userID.ToString(), permUse))
+            {
+                return;
+            }
 
             DoLog($"Got player {player?.displayName}");
             if (!_backpacks.ContainsKey(player.userID))
@@ -132,6 +139,12 @@ namespace Oxide.Plugins
         {
             // We do this here vs @ wipe since the players are not yet present then.
             if (!player.userID.IsSteamId()) return;
+
+            if (configData.Options.RequirePermission && !permission.UserHasPermission(player.userID.ToString(), permUse))
+            {
+                return;
+            }
+
             // This should ensure this only happens once per wipe on first connect.
             if (reloaded.Contains(player.userID)) return;
 
@@ -211,6 +224,7 @@ namespace Oxide.Plugins
         {
             public bool UseLargeBackpack;
             public bool AlwaysIssueBackpack;
+            public bool RequirePermission;
             public bool debug;
         }
 
@@ -223,6 +237,7 @@ namespace Oxide.Plugins
                 {
                     UseLargeBackpack = true,
                     AlwaysIssueBackpack = false,
+                    RequirePermission = false,
                     debug = false
                 },
                 Version = Version
