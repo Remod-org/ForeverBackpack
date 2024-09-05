@@ -24,7 +24,7 @@ using System.Linq;
 
 namespace Oxide.Plugins
 {
-    [Info("ForeverBackpack", "RFC1920", "0.0.3")]
+    [Info("ForeverBackpack", "RFC1920", "0.0.4")]
     [Description("Restore contents of worn Rust backpack at wipe")]
     internal class ForeverBackpack : RustPlugin
     {
@@ -174,6 +174,8 @@ namespace Oxide.Plugins
                     // Add items to BP
                     foreach (BPItem b in _backpacks[player.userID])
                     {
+                        if (configData.Options.RestrictedItems.Contains(item.info.displayName.english)) continue;
+
                         Item bpitem = ItemManager.CreateByItemID(b.ID);
                         bpitem.amount = b.Amount;
                         bpitem.condition = b.Condition;
@@ -225,6 +227,9 @@ namespace Oxide.Plugins
             public bool UseLargeBackpack;
             public bool AlwaysIssueBackpack;
             public bool RequirePermission;
+
+            public List<string> RestrictedItems;
+
             public bool debug;
         }
 
@@ -238,10 +243,12 @@ namespace Oxide.Plugins
                     UseLargeBackpack = true,
                     AlwaysIssueBackpack = false,
                     RequirePermission = false,
+                    RestrictedItems = new List<string>(),
                     debug = false
                 },
                 Version = Version
             };
+
             SaveConfig(config);
         }
 
@@ -249,6 +256,11 @@ namespace Oxide.Plugins
         {
             configData = Config.ReadObject<ConfigData>();
             configData.Version = Version;
+
+            if (configData.Options.RestrictedItems == null)
+            {
+                configData.Options.RestrictedItems = new List<string>();
+            }
 
             SaveConfig(configData);
         }

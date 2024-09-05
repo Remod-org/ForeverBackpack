@@ -19,12 +19,13 @@ At wipe, the player's wear inventory should be empty.  A new backpack will be ad
     "UseLargeBackpack": true,
     "AlwaysIssueBackpack": false,
     "RequirePermission": false,
+    "RestrictedItems": [],
     "debug": true
   },
   "Version": {
     "Major": 0,
     "Minor": 0,
-    "Patch": 3
+    "Patch": 4
   }
 }
 ```
@@ -32,6 +33,14 @@ At wipe, the player's wear inventory should be empty.  A new backpack will be ad
 - `UseLargeBackpack` -- (Default true) Use the large Rust backpack instead of the small backpack
 - `AlwaysIssueBackpack` -- (Default false) Issue backpack for a new player and equip in their wear container
 - `RequirePermission` -- (Default false) Require foreverbackpack.use permission to use.
+- `RestrictedItems` -- A list of item display names that will not be restored at wipe, e.g.:
+
+``json
+    "RestrictedItems": [
+      "rifle.ak",
+      "autoturret"
+    ]
+``
 
 ### Permissions
 
