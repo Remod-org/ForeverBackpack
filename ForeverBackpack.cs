@@ -24,13 +24,12 @@ using System.Linq;
 
 namespace Oxide.Plugins
 {
-    [Info("ForeverBackpack", "RFC1920", "0.0.5")]
+    [Info("ForeverBackpack", "RFC1920", "0.0.6")]
     [Description("Restore contents of worn Rust backpack at wipe")]
     internal class ForeverBackpack : RustPlugin
     {
         private ConfigData configData;
         private bool newsave;
-        public static ForeverBackpack Instance;
 
         private Dictionary<ulong, List<BPItem>> _backpacks = new Dictionary<ulong, List<BPItem>>();
         private List<ulong> reloaded = new List<ulong>();
@@ -61,8 +60,17 @@ namespace Oxide.Plugins
             {
                 reloaded.Clear();
                 newsave = false;
+                return;
             }
-            Instance = this;
+
+            List<ulong> rload = new List<ulong>();
+            foreach (ulong r in reloaded)
+            {
+                if (rload.Contains(r)) continue;
+                rload.Add(r);
+            }
+            reloaded = rload;
+            SaveData();
         }
 
         private void OnNewSave()
@@ -137,7 +145,7 @@ namespace Oxide.Plugins
                         }
                         DoLog("Adding to saved backpack inventory");
                         _backpacks[player.userID].Add(bPItem);
-                        reloaded.Add(player.userID);
+                        if (!reloaded.Contains(player.userID)) reloaded.Add(player.userID);
                     }
                 }
             }
@@ -167,7 +175,7 @@ namespace Oxide.Plugins
                     DoLog($"Adding empty backpack for {player?.displayName}");
                     Item item = ItemManager.CreateByItemID(configData.Options.UseLargeBackpack ? -907422733 : 2068884361);
                     item.MoveToContainer(player.inventory.containerWear);
-                    reloaded.Add(player.userID);
+                    if (!reloaded.Contains(player.userID)) reloaded.Add(player.userID);
                 }
             }
             else if (_backpacks.ContainsKey(player.userID))
@@ -206,7 +214,7 @@ namespace Oxide.Plugins
                     }
                     player.inventory.containerWear.MarkDirty();
                 }
-                reloaded.Add(player.userID);
+                if (!reloaded.Contains(player.userID)) reloaded.Add(player.userID);
             }
         }
 
