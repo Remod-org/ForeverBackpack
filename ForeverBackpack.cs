@@ -24,7 +24,7 @@ using System.Linq;
 
 namespace Oxide.Plugins
 {
-    [Info("ForeverBackpack", "RFC1920", "0.0.6")]
+    [Info("ForeverBackpack", "RFC1920", "0.0.7")]
     [Description("Restore contents of worn Rust backpack at wipe")]
     internal class ForeverBackpack : RustPlugin
     {
@@ -169,50 +169,79 @@ namespace Oxide.Plugins
             if (!_backpacks.ContainsKey(player.userID) && configData.Options.AlwaysIssueBackpack)
             {
                 // New player, and we have decided to issue a backpack
-                if (player.inventory.containerWear != null && player.inventory.containerWear.IsEmpty())
+                if (player.inventory.containerWear != null && player.inventory.containerWear.IsEmpty() && player.inventory.containerMain.IsEmpty())
                 {
-                    // Add empty BP to inventory
-                    DoLog($"Adding empty backpack for {player?.displayName}");
-                    Item item = ItemManager.CreateByItemID(configData.Options.UseLargeBackpack ? -907422733 : 2068884361);
-                    item.MoveToContainer(player.inventory.containerWear);
-                    if (!reloaded.Contains(player.userID)) reloaded.Add(player.userID);
+                    bool found = false;
+                    foreach (Item f in player.inventory.containerBelt.itemList)
+                    {
+                        if (f != null)
+                        {
+                            if (f.info.displayName.english.Contains("ackpack"))
+                            {
+                                found = true;
+                            }
+                        }
+                    }
+                    if (!found)
+                    {
+                        // Add empty BP to inventory
+                        DoLog($"Adding empty backpack for {player?.displayName}");
+                        Item item = ItemManager.CreateByItemID(configData.Options.UseLargeBackpack ? -907422733 : 2068884361);
+                        item.MoveToContainer(player.inventory.containerWear);
+                    }
                 }
+                if (!reloaded.Contains(player.userID)) reloaded.Add(player.userID);
             }
             else if (_backpacks.ContainsKey(player.userID))
             {
                 // Normal reload process
-                if (player.inventory.containerWear != null && player.inventory.containerWear.IsEmpty())
+                if (player.inventory.containerWear != null && player.inventory.containerWear.IsEmpty() && player.inventory.containerMain.IsEmpty())
                 {
-                    // Add BP to inventory
-                    DoLog($"Restoring backpack for {player?.displayName}");
-                    Item item = ItemManager.CreateByItemID(configData.Options.UseLargeBackpack ? -907422733 : 2068884361);
-                    int capacity = item.contents.capacity;
-                    item.MoveToContainer(player.inventory.containerWear);
-                    // Add items to BP
-                    foreach (BPItem b in _backpacks[player.userID])
+                    bool found = false;
+                    foreach (Item f in player.inventory.containerBelt.itemList)
                     {
-                        if (configData.Options.RestrictedItems.Contains(item.info.displayName.english)) continue;
-
-                        Item bpitem = ItemManager.CreateByItemID(b.ID);
-                        bpitem.amount = b.Amount;
-                        bpitem.condition = b.Condition;
-                        bpitem.maxCondition = b.MaxCondition;
-                        bpitem.condition = b.Condition;
-                        bpitem.ammoCount = b.AmmoAmount;
-                        if (b.Position > capacity)
+                        if (f != null)
                         {
-                            // Hopefully satisfies the case where the admin switched to small backpacks at wipe
-                            try
+                            if (f.info.displayName.english.Contains("ackpack"))
                             {
-                                bpitem.MoveToContainer(player.inventory.containerWear);
+                                found = true;
                             }
-                            catch { }
-                            continue;
                         }
-                        // Normal operation - item will be restored to its original position
-                        bpitem.MoveToContainer(item.contents, b.Position);
                     }
-                    player.inventory.containerWear.MarkDirty();
+                    if (!found)
+                    {
+                        // Add BP to inventory
+                        DoLog($"Restoring backpack for {player?.displayName}");
+                        Item item = ItemManager.CreateByItemID(configData.Options.UseLargeBackpack ? -907422733 : 2068884361);
+                        int capacity = item.contents.capacity;
+                        item.MoveToContainer(player.inventory.containerWear);
+
+                        // Add items to BP
+                        foreach (BPItem b in _backpacks[player.userID])
+                        {
+                            if (configData.Options.RestrictedItems.Contains(item.info.displayName.english)) continue;
+
+                            Item bpitem = ItemManager.CreateByItemID(b.ID);
+                            bpitem.amount = b.Amount;
+                            bpitem.condition = b.Condition;
+                            bpitem.maxCondition = b.MaxCondition;
+                            bpitem.condition = b.Condition;
+                            bpitem.ammoCount = b.AmmoAmount;
+                            if (b.Position > capacity)
+                            {
+                                // Hopefully satisfies the case where the admin switched to small backpacks at wipe
+                                try
+                                {
+                                    bpitem.MoveToContainer(player.inventory.containerWear);
+                                }
+                                catch { }
+                                continue;
+                            }
+                            // Normal operation - item will be restored to its original position
+                            bpitem.MoveToContainer(item.contents, b.Position);
+                        }
+                        player.inventory.containerWear.MarkDirty();
+                    }
                 }
                 if (!reloaded.Contains(player.userID)) reloaded.Add(player.userID);
             }
