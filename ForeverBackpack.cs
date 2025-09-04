@@ -20,19 +20,18 @@
 #endregion
 using Oxide.Core;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Oxide.Plugins
 {
-    [Info("ForeverBackpack", "RFC1920", "0.0.7")]
+    [Info("ForeverBackpack", "RFC1920", "0.0.8")]
     [Description("Restore contents of worn Rust backpack at wipe")]
     internal class ForeverBackpack : RustPlugin
     {
         private ConfigData configData;
         private bool newsave;
 
-        private Dictionary<ulong, List<BPItem>> _backpacks = new Dictionary<ulong, List<BPItem>>();
-        private List<ulong> reloaded = new List<ulong>();
+        private Dictionary<ulong, List<BPItem>> _backpacks = new();
+        private List<ulong> reloaded = new();
         private const string permUse = "foreverbackpack.use";
 
         public class BPItem
@@ -63,7 +62,7 @@ namespace Oxide.Plugins
                 return;
             }
 
-            List<ulong> rload = new List<ulong>();
+            List<ulong> rload = new();
             foreach (ulong r in reloaded)
             {
                 if (rload.Contains(r)) continue;
@@ -71,6 +70,14 @@ namespace Oxide.Plugins
             }
             reloaded = rload;
             SaveData();
+        }
+
+        private void OnServerShutdown()
+        {
+            foreach (BasePlayer player in BasePlayer.activePlayerList)
+            {
+                PlayerDisconnect(player);
+            }
         }
 
         private void OnNewSave()
@@ -120,7 +127,7 @@ namespace Oxide.Plugins
                 _backpacks.Add(player.userID, new List<BPItem>());
             }
             DoLog("Checking for backpack");
-            Item backpack = player.inventory.containerWear.FindItemsByItemID(-907422733).FirstOrDefault();
+            Item backpack = player.inventory.containerWear.FindItemByItemID(-907422733);
             if (backpack != null)
             {
                 DoLog("Found worn backpack!");
@@ -132,7 +139,7 @@ namespace Oxide.Plugins
                     if (item != null)
                     {
                         DoLog($"Found item {item.info.displayName.english} in backpack, stacked at {item.amount} in slot {item.position}");
-                        BPItem bPItem = new BPItem();
+                        BPItem bPItem = new();
                         if (item.info != null)
                         {
                             bPItem.Amount = item.amount > 0 ? item.amount : 1;
@@ -141,7 +148,7 @@ namespace Oxide.Plugins
                             bPItem.MaxCondition = item.maxCondition;
                             bPItem.ID = item.info.itemid;
                             bPItem.Position = item.position;
-                            bPItem.AmmoAmount = item.ammoCount != null ? item.ammoCount.Value : 0;
+                            //bPItem.AmmoAmount = item.ammoCount != null ? item.ammoCount.Value : 0;
                         }
                         DoLog("Adding to saved backpack inventory");
                         _backpacks[player.userID].Add(bPItem);
@@ -226,7 +233,7 @@ namespace Oxide.Plugins
                             bpitem.condition = b.Condition;
                             bpitem.maxCondition = b.MaxCondition;
                             bpitem.condition = b.Condition;
-                            bpitem.ammoCount = b.AmmoAmount;
+                            //bpitem.ammoCount = b.AmmoAmount;
                             if (b.Position > capacity)
                             {
                                 // Hopefully satisfies the case where the admin switched to small backpacks at wipe
@@ -284,7 +291,7 @@ namespace Oxide.Plugins
         protected override void LoadDefaultConfig()
         {
             Puts("Creating new config file.");
-            ConfigData config = new ConfigData
+            ConfigData config = new()
             {
                 Options = new Options()
                 {
